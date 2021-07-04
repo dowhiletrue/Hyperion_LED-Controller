@@ -1,4 +1,7 @@
 #include "WrapperLedControl.h"
+#include "led-candle.h"
+
+LedCandle rgbLedCandle;
 
 void WrapperLedControl::begin(uint16_t ledCount) {
   _ledCount = ledCount;
@@ -119,32 +122,6 @@ void WrapperLedControl::rainbowV2Step(void) {
 #define SPARKING 120
 
 void WrapperLedControl::fire2012Step(void) {
-    // Step 1.  Cool down every cell a little
-   for( int i = 0; i < _ledCount; i++) {
-     _fire2012Heat[i] = qsub8( _fire2012Heat[i],  random8(0, ((COOLING * 10) / _ledCount) + 2));
-   }
- 
-   // Step 2.  _fire2012Heat from each cell drifts 'up' and diffuses a little
-   for( int k=_ledCount - 1; k >= 2; k--) {
-     _fire2012Heat[k] = (_fire2012Heat[k - 1] + _fire2012Heat[k - 2] + _fire2012Heat[k - 2] ) / 3;
-   }
-   
-   // Step 3.  Randomly ignite new 'sparks' of _fire2012Heat near the bottom
-   if( random8() < SPARKING ) {
-     int y = random8(min(7, _ledCount - 1));
-     _fire2012Heat[y] = qadd8(_fire2012Heat[y], random8(160,255));
-   }
-
-   // Step 4.  Map from _fire2012Heat cells to LED colors
-   for( int j = 0; j < _ledCount; j++) {
-     CRGB color = HeatColor( _fire2012Heat[j]);
-     int pixelnumber;
-     if(_fire2012Direction) {
-       pixelnumber = (_ledCount-1) - j;
-     } else {
-       pixelnumber = j;
-     }
-     leds[pixelnumber] = color;
-   }
-   show();
+  fill_solid(leds, _ledCount, rgbLedCandle.getColour());
+  show();
 }

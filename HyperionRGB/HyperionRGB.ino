@@ -95,7 +95,7 @@ void changeMode(Mode newMode, int interval = 0) {
         break;
       case FIRE2012:
         if (interval == 0)
-          interval = 16;
+          interval = 10;
         animationThread.setInterval(interval);
         break;
       case HYPERION_UDP:
