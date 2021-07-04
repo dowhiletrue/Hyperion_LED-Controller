@@ -56,7 +56,7 @@ void WrapperUdpLed::handleProtocolRaw(int bytes) {
     _udp.readBytes(_udpBuffer, _bufferSize);
     Log.verbose("Contents: %s", _udpBuffer);
     for (int i = 0; i < _ledCount; i++) {
-      updateLed(i, _udpBuffer[i * 3 + 0], _udpBuffer[i * 3 + 1], _udpBuffer[i * 3 + 2]);
+      updateLed(i, _udpBuffer[i * 3 + 2], _udpBuffer[i * 3 + 0], _udpBuffer[i * 3 + 1]);
     }
     refreshLeds();
   } else {
