@@ -40,6 +40,7 @@ ThreadController threadController = ThreadController();
 Thread statusThread = Thread();
 EnhancedThread animationThread = EnhancedThread();
 EnhancedThread resetThread = EnhancedThread();
+EnhancedThread motionThread = EnhancedThread();
 EnhancedThread apThread = EnhancedThread();
 
 DNSServer dnsServer;
@@ -119,6 +120,7 @@ void refreshLeds(void) {
     ledStrip.show();
     if (autoswitch)
       resetThread.reset();
+      motionThread.reset();
   } else if (autoswitch) {
     changeMode(HYPERION_UDP);
     Log.info("Autoswitch to HYPERION_UDP");
@@ -139,6 +141,12 @@ void resetMode(void) {
   #endif
   resetThread.enabled = false;
 }
+
+
+void turnOff(void) {
+  changeMode(OFF);
+}
+
 
 void resetApIdle(void) {
   if (wifi.isAPConnected()) {
@@ -223,6 +231,15 @@ void handleEvents(void) {
     }
   #endif
 
+
+  int val = digitalRead(D7);
+  //low = no motion, high = motion
+  if (digitalRead(D7) == HIGH) {
+    if (activeMode == OFF) {
+      resetMode();
+    }
+    motionThread.reset();
+  }
   threadController.run();
 }
 
@@ -249,6 +266,10 @@ void setup(void) {
   resetThread.enabled = false;
   threadController.add(&resetThread);
   
+  motionThread.onRun(turnOff);
+  motionThread.setInterval(5000);
+  threadController.add(&motionThread);
+
   #ifdef CONFIG_ENABLE_WEBCONFIG
     ledStrip.begin(Config::getConfig()->led.count);
   #else
