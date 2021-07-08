@@ -5,6 +5,7 @@ LedCandle rgbLedCandle;
 
 void WrapperLedControl::begin(uint16_t ledCount) {
   _ledCount = ledCount;
+  blend_steps = 10;
 
   #ifdef CONFIG_LED_CLOCKLESS_CHIPSET
     Log.debug("Chipset=%s, dataPin=%i, clockPin=%s, colorOrder=%i, ledCount=%i", "Clockless", CONFIG_LED_DATAPIN, "NONE", CONFIG_LED_COLOR_ORDER, ledCount);
@@ -18,6 +19,8 @@ void WrapperLedControl::begin(uint16_t ledCount) {
   #endif
   
   leds = new CRGB[_ledCount];
+  next_leds = new CRGB[_ledCount];
+  _previous_leds = new CRGB[_ledCount];
   _fire2012Heat = new byte[_ledCount];
   
   #ifdef CONFIG_LED_CLOCKLESS_CHIPSET
@@ -38,6 +41,31 @@ void WrapperLedControl::show(void) {
     FastLED.show();
   #endif
 }
+
+
+void WrapperLedControl::initBlend(void) {
+ blend_step = 0;
+ memcpy(_previous_leds, leds, _ledCount * 3);
+}
+
+
+void WrapperLedControl::blendStep(void) {
+  if (blend_step <= blend_steps) {
+    for (int i = 0; i < _ledCount; i++) {
+      leds[i] = blend(_previous_leds[i], next_leds[i], 255 / blend_steps * blend_step);
+    }
+    blend_step++;
+    show();
+  } else if (blend_step == blend_steps + 1) {
+    for (int i = 0; i < _ledCount; i++) {
+      leds[i] = next_leds[i];
+    }
+    blend_step++;
+    show();
+  }
+}
+
+
 
 void WrapperLedControl::clear(void) {
   #if defined CONFIG_LED_PWM

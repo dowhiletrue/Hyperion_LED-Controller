@@ -10,15 +10,18 @@ class WrapperLedControl {
     void
       begin(uint16_t ledCount),
       show(void),
+      initBlend(void),
       clear(void),
       fillSolid(CRGB color),
       fillSolid(byte r, byte g, byte b),
+      blendStep(void),
       rainbowStep(void),
       rainbowV2Step(void),
       rainbowFullStep(void),
       fire2012Step(void);
 
     CRGB* leds;
+    CRGB* next_leds;
       
   private:       
     CRGB wheel(byte wheelPos);
@@ -27,6 +30,9 @@ class WrapperLedControl {
     boolean _fire2012Direction;
     byte* _fire2012Heat;
     uint16_t _ledCount;
+    uint8_t blend_step;
+    uint8_t blend_steps;
+    CRGB* _previous_leds;
 };
 
 #endif

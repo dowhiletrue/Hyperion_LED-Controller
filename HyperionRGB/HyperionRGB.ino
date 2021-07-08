@@ -41,6 +41,7 @@ Thread statusThread = Thread();
 EnhancedThread animationThread = EnhancedThread();
 EnhancedThread resetThread = EnhancedThread();
 EnhancedThread motionThread = EnhancedThread();
+EnhancedThread blendThread = EnhancedThread();
 EnhancedThread apThread = EnhancedThread();
 
 DNSServer dnsServer;
@@ -53,6 +54,10 @@ void statusInfo(void) {
     Log.debug("HEAP=%i", ESP.getFreeHeap());
   }
   digitalWrite(LED, ledState);
+}
+
+void blendStep() {
+  ledStrip.blendStep();
 }
 
 void animationStep() {
@@ -102,6 +107,9 @@ void changeMode(Mode newMode, int interval = 0) {
       case HYPERION_UDP:
         if (!autoswitch)
           udpLed.begin();
+          if (interval == 0)
+            interval = 10;
+          blendThread.setInterval(interval);
     }
     if (interval > 0)
       Log.debug("Interval set to %ims", interval);
@@ -111,16 +119,17 @@ void changeMode(Mode newMode, int interval = 0) {
 void updateLed(int id, byte r, byte g, byte b) {
   if (activeMode == HYPERION_UDP) {
     Log.verbose("LED %i, r=%i, g=%i, b=%i", id + 1, r, g, b);
-    ledStrip.leds[id].setRGB(r, g, b);
+    ledStrip.next_leds[id].setRGB(r, g, b);
   }
 }
 void refreshLeds(void) {
   if (activeMode == HYPERION_UDP) {
     Log.debug("refresh LEDs");
-    ledStrip.show();
+    ledStrip.initBlend();
     if (autoswitch)
       resetThread.reset();
       motionThread.reset();
+      blendThread.reset();
   } else if (autoswitch) {
     changeMode(HYPERION_UDP);
     Log.info("Autoswitch to HYPERION_UDP");
@@ -140,6 +149,7 @@ void resetMode(void) {
     changeMode(CONFIG_LED_STANDARD_MODE);
   #endif
   resetThread.enabled = false;
+  blendThread.enabled = false;
 }
 
 
@@ -267,8 +277,13 @@ void setup(void) {
   threadController.add(&resetThread);
   
   motionThread.onRun(turnOff);
-  motionThread.setInterval(5000);
+  motionThread.setInterval(30000);
   threadController.add(&motionThread);
+
+  blendThread.onRun(blendStep);
+  blendThread.setInterval(10);
+  blendThread.enabled = false;
+  threadController.add(&blendThread);
 
   #ifdef CONFIG_ENABLE_WEBCONFIG
     ledStrip.begin(Config::getConfig()->led.count);
