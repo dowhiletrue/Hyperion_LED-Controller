@@ -43,6 +43,13 @@ void WrapperLedControl::show(void) {
 }
 
 
+void WrapperLedControl::fadeToBlackStep(void) {
+  for (int i = 0; i < _ledCount; i++) {
+    leds[i].fadeToBlackBy(8);
+  }
+  show();
+}
+
 void WrapperLedControl::initBlend(void) {
  blend_step = 0;
  memcpy(_previous_leds, leds, _ledCount * 3);
@@ -73,6 +80,12 @@ void WrapperLedControl::clear(void) {
   #else
     FastLED.clear();
   #endif
+}
+
+void WrapperLedControl::initSolid(CRGB color) {
+  blend_step = 0;
+  memcpy(_previous_leds, leds, _ledCount * 3);
+  fill_solid(next_leds, _ledCount, color);
 }
 
 void WrapperLedControl::fillSolid(CRGB color) {

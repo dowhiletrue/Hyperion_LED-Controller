@@ -56,12 +56,15 @@ void statusInfo(void) {
   digitalWrite(LED, ledState);
 }
 
-void blendStep() {
-  ledStrip.blendStep();
-}
 
 void animationStep() {
   switch (activeMode) {
+    case OFF:
+      ledStrip.fadeToBlackStep();
+      break;
+    case STATIC_COLOR:
+      ledStrip.blendStep();
+      break;
     case RAINBOW:
       ledStrip.rainbowStep();
       break;
@@ -73,6 +76,9 @@ void animationStep() {
       break;
     case RAINBOW_FULL:
       ledStrip.rainbowFullStep();
+      break;
+    case HYPERION_UDP:
+      ledStrip.blendStep();
       break;
   }
 }
@@ -86,11 +92,15 @@ void changeMode(Mode newMode, int interval = 0) {
     
     switch (activeMode) {
       case OFF:
-        ledStrip.clear();
-        ledStrip.show();
+        if (interval == 0)
+          interval = 10;
+        animationThread.setInterval(interval);
         break;
       case STATIC_COLOR:
-        ledStrip.fillSolid(static_cast<CRGB>(Config::getConfig()->led.color));
+        ledStrip.initSolid(static_cast<CRGB>(Config::getConfig()->led.color));
+        if (interval == 0)
+          interval = 10;
+        animationThread.setInterval(interval);
         break;
       case RAINBOW:
       case RAINBOW_V2:
@@ -244,6 +254,9 @@ void handleEvents(void) {
 
   int val = digitalRead(D7);
   //low = no motion, high = motion
+  if (activeMode != STATIC_COLOR) {
+    motionThread.reset();
+  }
   if (digitalRead(D7) == HIGH) {
     if (activeMode == OFF) {
       resetMode();
@@ -280,7 +293,7 @@ void setup(void) {
   motionThread.setInterval(30000);
   threadController.add(&motionThread);
 
-  blendThread.onRun(blendStep);
+  blendThread.onRun(animationStep);
   blendThread.setInterval(10);
   blendThread.enabled = false;
   threadController.add(&blendThread);
@@ -336,9 +349,9 @@ void loop(void) {
     case FIRE2012:
     case RAINBOW_V2:
     case RAINBOW_FULL:
-      animationThread.runIfNeeded();
-      break;
+    case OFF:
     case STATIC_COLOR:
+      animationThread.runIfNeeded();
       break;
     case HYPERION_UDP:
       break;
