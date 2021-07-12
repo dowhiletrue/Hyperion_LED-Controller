@@ -62,6 +62,7 @@ void animationStep() {
     case OFF:
       ledStrip.fadeToBlackStep();
       break;
+    case LIGHTNING:
     case STATIC_COLOR:
       ledStrip.blendStep();
       break;
@@ -96,6 +97,7 @@ void changeMode(Mode newMode, int interval = 0) {
           interval = 10;
         animationThread.setInterval(interval);
         break;
+      case LIGHTNING:
       case STATIC_COLOR:
         ledStrip.initSolid(static_cast<CRGB>(Config::getConfig()->led.color));
         if (interval == 0)
@@ -149,7 +151,7 @@ void refreshLeds(void) {
 void ledColorWipe(byte r, byte g, byte b) {
   Log.debug("LED color wipe: r=%i, g=%i, b=%i", r, g, b);
   changeMode(STATIC_COLOR);
-  ledStrip.fillSolid(r, g, b);
+  ledStrip.initSolid(CRGB(r, g, b));
 }
 void resetMode(void) {
   Log.info("Reset Mode");
@@ -254,7 +256,7 @@ void handleEvents(void) {
 
   int val = digitalRead(D7);
   //low = no motion, high = motion
-  if (activeMode != STATIC_COLOR) {
+  if (activeMode != LIGHTNING) {
     motionThread.reset();
   }
   if (digitalRead(D7) == HIGH) {
@@ -350,6 +352,7 @@ void loop(void) {
     case RAINBOW_V2:
     case RAINBOW_FULL:
     case OFF:
+    case LIGHTNING:
     case STATIC_COLOR:
       animationThread.runIfNeeded();
       break;
