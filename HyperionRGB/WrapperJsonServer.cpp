@@ -73,6 +73,9 @@ void WrapperJsonServer::readData(void) {
         _tcpClient.print(_activeLedColor[2]);
         
         _tcpClient.print("]}],"
+          "\"activeMode\": \"");
+        _tcpClient.print(modeStr[activeMode]);
+        _tcpClient.print("\","
           "\"hostname\":\"ESP8266\","
           "\"priorities\":[],\"transform\":[{\"blacklevel\":[0.0,0.0,0.0],\"gamma\":[1.0,1.0,1.0],\"id\":\"default\",\"saturationGain\":1.0,\"threshold\":[0.0,0.0,0.0],\"valueGain\":1.0,\"whitelevel\":[1.0,1.0,1.0]}]},"
           "\"success\":true}");
@@ -94,17 +97,13 @@ void WrapperJsonServer::readData(void) {
           interval = (int)(1000.0 / effectSpeed);
         }
       }
-      if (effect.equals("Hyperion UDP")) {
-        effectChange(HYPERION_UDP);
-      } else if (effect.equals("Rainbow swirl")) {
-        effectChange(RAINBOW, interval);
-      } else if (effect.equals("Rainbow swirl v2")) {
-        effectChange(RAINBOW_V2, interval);
-      } else if (effect.equals("Rainbow full")) {
-        effectChange(RAINBOW_FULL, interval);
-      } else if (effect.equals("Fire2012")) {
-        effectChange(FIRE2012, interval);
+      for ( const Mode m : allModes ) {
+        if (effect.equals(modeStr[m])) {
+          effectChange(m);
+          break;
+        }
       }
+
       _tcpClient.println("{\"success\":true}");
     } else {
       _tcpClient.println("{\"success\":false}");
@@ -112,6 +111,10 @@ void WrapperJsonServer::readData(void) {
   } else {
     Log.error("JSON not parsed");
   }
+}
+
+void WrapperJsonServer::setActiveMode(Mode activeMode) {
+  this->activeMode = activeMode;
 }
 
 void WrapperJsonServer::onLedColorWipe(void(* function) (byte, byte, byte)) {

@@ -125,6 +125,7 @@ void changeMode(Mode newMode, int interval = 0) {
     }
     if (interval > 0)
       Log.debug("Interval set to %ims", interval);
+    jsonServer.setActiveMode(activeMode);
   }
 }
 
