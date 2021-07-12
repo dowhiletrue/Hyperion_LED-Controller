@@ -86,12 +86,14 @@ void WrapperJsonServer::readData(void) {
       _tcpClient.println("{\"success\":true}");
     } else if (command.equals("effect")) {
       String effect = root["effect"]["name"];
-      double effectSpeed = root["effect"]["args"]["speed"];
+      JsonVariant effectSpeed = root["effect"]["args"]["speed"];
       int interval = 0;
-      if (effectSpeed > 0) {
-        interval = (int)(1000.0 / effectSpeed);
+      if (!effectSpeed.isNull()) {
+        double speed = effectSpeed.as<double>();
+        if (speed > 0) {
+          interval = (int)(1000.0 / effectSpeed);
+        }
       }
-      
       if (effect.equals("Hyperion UDP")) {
         effectChange(HYPERION_UDP);
       } else if (effect.equals("Rainbow swirl")) {
