@@ -10,7 +10,7 @@ class WrapperLedControl {
     void
       begin(uint16_t ledCount),
       show(void),
-      initBlend(void),
+      initBlend(uint8_t blendSteps),
       initSolid(CRGB color),
       clear(void),
       fillSolid(CRGB color),
@@ -32,8 +32,8 @@ class WrapperLedControl {
     boolean _fire2012Direction;
     byte* _fire2012Heat;
     uint16_t _ledCount;
-    uint8_t blend_step;
-    uint8_t blend_steps;
+    uint8_t currentBlendStep;
+    uint8_t blendSteps;
     CRGB* _previous_leds;
 };
 

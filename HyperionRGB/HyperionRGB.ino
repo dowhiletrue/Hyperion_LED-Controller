@@ -96,6 +96,7 @@ void changeMode(Mode newMode, int interval = 0) {
         if (interval == 0)
           interval = 10;
         animationThread.setInterval(interval);
+        ledStrip.initBlend(30);
         break;
       case LIGHTNING:
       case STATIC_COLOR:
@@ -103,6 +104,7 @@ void changeMode(Mode newMode, int interval = 0) {
         if (interval == 0)
           interval = 10;
         animationThread.setInterval(interval);
+        ledStrip.initBlend(10);
         break;
       case RAINBOW:
       case RAINBOW_V2:
@@ -138,7 +140,7 @@ void updateLed(int id, byte r, byte g, byte b) {
 void refreshLeds(void) {
   if (activeMode == HYPERION_UDP) {
     Log.debug("refresh LEDs");
-    ledStrip.initBlend();
+    ledStrip.initBlend(10);
     if (autoswitch)
       resetThread.reset();
       motionThread.reset();

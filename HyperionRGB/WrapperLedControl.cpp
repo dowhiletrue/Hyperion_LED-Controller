@@ -5,7 +5,7 @@ LedCandle rgbLedCandle;
 
 void WrapperLedControl::begin(uint16_t ledCount) {
   _ledCount = ledCount;
-  blend_steps = 10;
+  blendSteps = 10;
 
   #ifdef CONFIG_LED_CLOCKLESS_CHIPSET
     Log.debug("Chipset=%s, dataPin=%i, clockPin=%s, colorOrder=%i, ledCount=%i", "Clockless", CONFIG_LED_DATAPIN, "NONE", CONFIG_LED_COLOR_ORDER, ledCount);
@@ -44,30 +44,38 @@ void WrapperLedControl::show(void) {
 
 
 void WrapperLedControl::fadeToBlackStep(void) {
-  for (int i = 0; i < _ledCount; i++) {
-    leds[i].fadeToBlackBy(8);
+  if (currentBlendStep <= blendSteps) {
+    for (int i = 0; i < _ledCount; i++) {
+      leds[i].fadeToBlackBy(8);
+    }
+    currentBlendStep++;
+    show();
+  } else if (currentBlendStep == blendSteps + 1) {
+    currentBlendStep++;
+    clear();
+    show();
   }
-  show();
 }
 
-void WrapperLedControl::initBlend(void) {
- blend_step = 0;
+void WrapperLedControl::initBlend(uint8_t blendSteps) {
+ this->blendSteps = blendSteps;
+ currentBlendStep = 0;
  memcpy(_previous_leds, leds, _ledCount * 3);
 }
 
 
 void WrapperLedControl::blendStep(void) {
-  if (blend_step <= blend_steps) {
+  if (currentBlendStep <= blendSteps) {
     for (int i = 0; i < _ledCount; i++) {
-      leds[i] = blend(_previous_leds[i], next_leds[i], 255 / blend_steps * blend_step);
+      leds[i] = blend(_previous_leds[i], next_leds[i], 255 / blendSteps * currentBlendStep);
     }
-    blend_step++;
+    currentBlendStep++;
     show();
-  } else if (blend_step == blend_steps + 1) {
+  } else if (currentBlendStep == blendSteps + 1) {
     for (int i = 0; i < _ledCount; i++) {
       leds[i] = next_leds[i];
     }
-    blend_step++;
+    currentBlendStep++;
     show();
   }
 }
@@ -83,7 +91,7 @@ void WrapperLedControl::clear(void) {
 }
 
 void WrapperLedControl::initSolid(CRGB color) {
-  blend_step = 0;
+  currentBlendStep = 0;
   memcpy(_previous_leds, leds, _ledCount * 3);
   fill_solid(next_leds, _ledCount, color);
 }
