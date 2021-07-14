@@ -12,6 +12,7 @@
 #include "WrapperLedControl.h"
 #include "WrapperUdpLed.h"
 #include "WrapperJsonServer.h"
+#include "WrapperMqttClient.h"
 
 #include "WrapperWebconfig.h"
 #include <DNSServer.h>
@@ -28,6 +29,7 @@ WrapperLedControl ledStrip;
 
 WrapperUdpLed udpLed;
 WrapperJsonServer jsonServer;
+WrapperMqttClient mqttClient;
 
 #ifdef CONFIG_ENABLE_WEBCONFIG
   WrapperWebconfig webServer;
@@ -35,6 +37,8 @@ WrapperJsonServer jsonServer;
 
 Mode activeMode = MODE_NONE;
 boolean autoswitch;
+
+boolean motionDetected;
 
 ThreadController threadController = ThreadController();
 Thread statusThread = Thread();
@@ -168,8 +172,12 @@ void resetMode(void) {
 }
 
 
-void turnOff(void) {
+void handleNoMotion(void) {
   changeMode(OFF);
+  if (motionDetected) {
+    mqttClient.publish("ambilight/motion", "false");
+  }
+  motionDetected = false;
 }
 
 
@@ -248,6 +256,7 @@ void handleEvents(void) {
   ota.handle();
   udpLed.handle();
   jsonServer.handle();
+  mqttClient.handle();
   #ifdef CONFIG_ENABLE_WEBCONFIG
     if (wifi.isAP())
       dnsServer.processNextRequest();
@@ -264,7 +273,11 @@ void handleEvents(void) {
   }
   if (digitalRead(D7) == HIGH) {
     if (activeMode == OFF) {
-      resetMode();
+      if (!motionDetected) {
+        resetMode();
+        mqttClient.publish("ambilight/motion", "true");
+        motionDetected = true;
+      }
     }
     motionThread.reset();
   }
@@ -294,7 +307,7 @@ void setup(void) {
   resetThread.enabled = false;
   threadController.add(&resetThread);
   
-  motionThread.onRun(turnOff);
+  motionThread.onRun(handleNoMotion);
   motionThread.setInterval(30000);
   threadController.add(&motionThread);
 
@@ -342,6 +355,7 @@ void setup(void) {
   jsonServer.onLedColorWipe(ledColorWipe);
   jsonServer.onClearCmd(resetMode);
   jsonServer.onEffectChange(changeMode);
+  mqttClient.begin();
 
   pinMode(LED, OUTPUT);   // LED pin as output.
   Log.info("HEAP=%i", ESP.getFreeHeap());
