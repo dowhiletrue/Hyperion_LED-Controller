@@ -103,6 +103,7 @@ void changeMode(Mode newMode, int interval = 0) {
         ledStrip.initBlend(30);
         break;
       case LIGHTNING:
+        motionThread.reset();
       case STATIC_COLOR:
         ledStrip.initSolid(static_cast<CRGB>(Config::getConfig()->led.color));
         if (interval == 0)
@@ -145,10 +146,9 @@ void refreshLeds(void) {
   if (activeMode == HYPERION_UDP) {
     Log.debug("refresh LEDs");
     ledStrip.initBlend(10);
+    blendThread.reset();
     if (autoswitch)
       resetThread.reset();
-      motionThread.reset();
-      blendThread.reset();
   } else if (autoswitch) {
     changeMode(HYPERION_UDP);
     Log.info("Autoswitch to HYPERION_UDP");
@@ -173,10 +173,10 @@ void resetMode(void) {
 
 
 void handleNoMotion(void) {
-  changeMode(OFF);
-  if (motionDetected) {
-    mqttClient.publish("ambilight/motion", "false");
+  if (activeMode == LIGHTNING) {
+    changeMode(OFF);
   }
+  mqttClient.publish("ambilight/motion", "false");
   motionDetected = false;
 }
 
@@ -268,9 +268,6 @@ void handleEvents(void) {
 
   int val = digitalRead(D7);
   //low = no motion, high = motion
-  if (activeMode != LIGHTNING) {
-    motionThread.reset();
-  }
   if (digitalRead(D7) == HIGH) {
     if (activeMode == OFF) {
       if (!motionDetected) {
