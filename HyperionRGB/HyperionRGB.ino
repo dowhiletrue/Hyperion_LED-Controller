@@ -103,7 +103,7 @@ void changeMode(Mode newMode, int interval = 0) {
         ledStrip.initBlend(30);
         break;
       case LIGHTNING:
-        motionThread.reset();
+        //motionThread.reset();
       case STATIC_COLOR:
         ledStrip.initSolid(static_cast<CRGB>(Config::getConfig()->led.color));
         if (interval == 0)
@@ -269,12 +269,12 @@ void handleEvents(void) {
   int val = digitalRead(D7);
   //low = no motion, high = motion
   if (digitalRead(D7) == HIGH) {
-    if (activeMode == OFF) {
-      if (!motionDetected) {
+    if (!motionDetected) {
+      if (activeMode == OFF) {
         resetMode();
-        mqttClient.publish("ambilight/motion", "true");
-        motionDetected = true;
       }
+      mqttClient.publish("ambilight/motion", "true");
+      motionDetected = true;
     }
     motionThread.reset();
   }
@@ -305,7 +305,7 @@ void setup(void) {
   threadController.add(&resetThread);
   
   motionThread.onRun(handleNoMotion);
-  motionThread.setInterval(30000);
+  motionThread.setInterval(CONFIG_LED_LIGHTNING_MODE_TIMEOUT_MS);
   threadController.add(&motionThread);
 
   blendThread.onRun(animationStep);

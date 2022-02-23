@@ -17,7 +17,7 @@ void WrapperMqttClient::handle(void) {
 }
 
 void WrapperMqttClient::publish(const char* topic, const char* payload) {
-  _client.publish(topic, payload);
+  _client.publish(topic, payload, true);
 }
 
 void WrapperMqttClient::callback(String topic, byte* message, unsigned int length) {
