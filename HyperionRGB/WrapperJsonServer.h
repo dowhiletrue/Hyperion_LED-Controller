@@ -45,7 +45,6 @@ class WrapperJsonServer {
 
     byte* _activeLedColor;
     Mode activeMode;
-    const char* modeStr[9] = {"Off", "Hyperion UDP", "Lightning", "Static Color", "Rainbow swirl", "Fire2012", "Rainbow swirl v2", "Rainbow full", "None"};
 };
 
 #endif
