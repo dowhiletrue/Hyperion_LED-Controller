@@ -23,6 +23,9 @@ class WrapperMqttClient {
     void
       callback(String topic, byte* message, unsigned int length),
       reconnect(void);
+
+    boolean
+      connect();
 };
 
 #endif

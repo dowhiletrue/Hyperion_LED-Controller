@@ -12,7 +12,7 @@ void WrapperMqttClient::handle(void) {
     reconnect();
   }
   if(!_client.loop()) {
-    _client.connect("ESP8266Client");
+    this->connect();
   }
 }
 
@@ -31,10 +31,17 @@ void WrapperMqttClient::callback(String topic, byte* message, unsigned int lengt
 }
 
 void WrapperMqttClient::reconnect(void) {
-  if (_client.connect("ESP8266Client")) {
+  if (this->connect()) {
       Log.info("connected to broker");  
       _client.subscribe("ambilight/control");
     } else {
       Log.error("failed to connect to mqtt broker, rc=%i", _client.state());
     }
+}
+
+boolean WrapperMqttClient::connect() {
+  boolean successfullyConnected = _client.connect("ambilight", "ambilight/state", 1, true, "DISCONNECTED");
+  if (successfullyConnected) {
+    _client.publish("ambilight/state", "CONNECTED", true);
+  }
 }
