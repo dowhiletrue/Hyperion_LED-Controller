@@ -352,6 +352,8 @@ void setup(void) {
   jsonServer.onLedColorWipe(ledColorWipe);
   jsonServer.onClearCmd(resetMode);
   jsonServer.onEffectChange(changeMode);
+  mqttClient.onLedColorWipe(ledColorWipe);
+  mqttClient.onEffectChange(changeMode);
   mqttClient.begin();
 
   pinMode(LED, OUTPUT);   // LED pin as output.
