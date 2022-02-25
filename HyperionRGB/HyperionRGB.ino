@@ -67,6 +67,12 @@ void animationStep() {
       ledStrip.fadeToBlackStep();
       break;
     case LIGHTNING:
+      if (motionDetected) {
+        ledStrip.blendStep();
+      } else {
+        ledStrip.fadeToBlackStep();
+      }
+      break;
     case STATIC_COLOR:
       ledStrip.blendStep();
       break;
@@ -87,6 +93,15 @@ void animationStep() {
       break;
   }
 }
+void initDark(int interval = 10) {
+  animationThread.setInterval(interval);
+  ledStrip.initBlend(30);
+}
+void initStaticColor(int interval = 10) {
+  ledStrip.initSolid(static_cast<CRGB>(Config::getConfig()->led.color));
+  animationThread.setInterval(interval);
+  ledStrip.initBlend(10);
+}
 
 void changeMode(Mode newMode, int interval = 0) {
   if (newMode != activeMode) {
@@ -97,19 +112,11 @@ void changeMode(Mode newMode, int interval = 0) {
     
     switch (activeMode) {
       case OFF:
-        if (interval == 0)
-          interval = 10;
-        animationThread.setInterval(interval);
-        ledStrip.initBlend(30);
-        break;
       case LIGHTNING:
-        //motionThread.reset();
+        initDark();
+        break;
       case STATIC_COLOR:
-        ledStrip.initSolid(static_cast<CRGB>(Config::getConfig()->led.color));
-        if (interval == 0)
-          interval = 10;
-        animationThread.setInterval(interval);
-        ledStrip.initBlend(10);
+        initStaticColor();
         break;
       case RAINBOW:
       case RAINBOW_V2:
@@ -160,6 +167,8 @@ void ledColorWipe(byte r, byte g, byte b) {
   changeMode(STATIC_COLOR);
   ledStrip.initSolid(CRGB(r, g, b));
 }
+
+
 void resetMode(void) {
   Log.info("Reset Mode");
   #ifdef CONFIG_ENABLE_WEBCONFIG
@@ -174,7 +183,7 @@ void resetMode(void) {
 
 void handleNoMotion(void) {
   if (activeMode == LIGHTNING) {
-    changeMode(OFF);
+    initDark();
   }
   mqttClient.publish("ambilight/motion", "false");
   motionDetected = false;
@@ -270,8 +279,8 @@ void handleEvents(void) {
   //low = no motion, high = motion
   if (digitalRead(D7) == HIGH) {
     if (!motionDetected) {
-      if (activeMode == OFF) {
-        resetMode();
+      if (activeMode == LIGHTNING) {
+        initStaticColor();
       }
       mqttClient.publish("ambilight/motion", "true");
       motionDetected = true;
