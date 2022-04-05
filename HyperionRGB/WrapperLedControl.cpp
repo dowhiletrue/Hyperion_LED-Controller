@@ -24,7 +24,7 @@ void WrapperLedControl::begin(uint16_t ledCount) {
   _fire2012Heat = new byte[_ledCount];
   
   #ifdef CONFIG_LED_CLOCKLESS_CHIPSET
-    FastLED.addLeds<CONFIG_LED_CLOCKLESS_CHIPSET, CONFIG_LED_DATAPIN, CONFIG_LED_COLOR_ORDER>(leds, _ledCount);
+    FastLED.addLeds<CONFIG_LED_CLOCKLESS_CHIPSET, CONFIG_LED_DATAPIN, CONFIG_LED_COLOR_ORDER>(leds, _ledCount).setCorrection(TypicalLEDStrip);
   #elif defined CONFIG_LED_PWM
     //Nothing to to
   #else
